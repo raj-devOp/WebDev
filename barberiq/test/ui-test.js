@@ -20,6 +20,35 @@ const check = (name, cond, detail = '') => {
   else { fail++; log.push(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); }
 };
 
+const OWNER_PASS = process.env.OWNER_PASS || '';
+
+/**
+ * Wait until a page has settled: either the screen painted real content, or a
+ * dialog is up. The owner-password gate renders a deliberately short empty
+ * state, so a pure "lots of text" check would time out waiting for a login box.
+ */
+async function settle(pg, timeout = 15000) {
+  await pg.waitForFunction(
+    () => {
+      if (document.querySelector('.modal')) return true;
+      const v = document.querySelector('#view');
+      return v && v.textContent.trim().length > 120;
+    },
+    undefined,
+    { timeout },
+  );
+}
+
+/** Sign in as owner if the password gate is showing. Returns true if it did. */
+async function signInIfPrompted(pg) {
+  if (!OWNER_PASS) return false;
+  if (!(await pg.locator('.modal input[type=password]').count())) return false;
+  await pg.locator('.modal input[type=password]').fill(OWNER_PASS);
+  await pg.locator('.modal').getByRole('button', { name: 'Sign in', exact: true }).click();
+  await pg.waitForTimeout(3200);
+  return true;
+}
+
 (async () => {
   const browser = await chromium.launch();
   const errors = [];
@@ -34,11 +63,7 @@ const check = (name, cond, detail = '') => {
     // Wait for the screen to actually paint content, not just for the shell.
     // waitForFunction(fn, arg, options) — options is the THIRD parameter, so
     // the arg slot must be passed explicitly or the timeout is ignored.
-    await page.waitForFunction(
-      () => { const v = document.querySelector('#view'); return v && v.textContent.trim().length > 120; },
-      undefined,
-      { timeout: 15000 },
-    );
+    await settle(page);
     await page.waitForTimeout(450); // let charts settle
   };
 
@@ -133,6 +158,15 @@ const check = (name, cond, detail = '') => {
 
   // --------------------------------------------------------------- DASHBOARD
   await goto('#/dashboard');
+
+  // The PHP build protects the dashboard with an owner password. If the gate is
+  // on, sign in — that way we exercise the real shipping configuration rather
+  // than only the unprotected variant.
+  if (await signInIfPrompted(page)) {
+    check('owner login prompt appears on protected dashboard', true);
+    check('owner login unlocks the dashboard', await page.locator('.stat').count() >= 4,
+      `got ${await page.locator('.stat').count()} stat tiles`);
+  }
   check('dashboard renders', await page.locator('.stat').count() >= 4);
   const dashText = await page.locator('#view').textContent();
   check("today's earnings tile present", /earnings|Revenue/i.test(dashText));
@@ -217,9 +251,10 @@ const check = (name, cond, detail = '') => {
     ['#/dashboard', '11-mobile-dashboard'],
   ]) {
     await mp.goto(`${BASE}/${hash}`, { waitUntil: 'domcontentloaded' });
-    await mp.waitForFunction(
-      () => { const v = document.querySelector('#view'); return v && v.textContent.trim().length > 120; },
-      { timeout: 15000 });
+    await settle(mp);
+    // Fresh context, so no owner cookie — sign in if the gate is up, otherwise
+    // the mobile dashboard screenshot is just a password box.
+    await signInIfPrompted(mp);
     await mp.waitForTimeout(600);
     await mp.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true });
   }
@@ -243,9 +278,8 @@ const check = (name, cond, detail = '') => {
   const tab = await browser.newContext({ viewport: { width: 834, height: 1112 } });
   const tp = await tab.newPage();
   await tp.goto(`${BASE}/#/dashboard`, { waitUntil: 'domcontentloaded' });
-  await tp.waitForFunction(
-    () => { const v = document.querySelector('#view'); return v && v.textContent.trim().length > 120; },
-    { timeout: 15000 });
+  await settle(tp);
+  await signInIfPrompted(tp);
   await tp.waitForTimeout(600);
   await tp.screenshot({ path: path.join(OUT, '12-tablet-dashboard.png'), fullPage: true });
   const tabOverflow = await tp.evaluate(() =>
@@ -253,7 +287,11 @@ const check = (name, cond, detail = '') => {
   check('no horizontal scroll on tablet', tabOverflow <= 1, `overflow ${tabOverflow}px`);
 
   // ------------------------------------------------------------ console clean
-  const real = errors.filter((e) => !/favicon|fonts\.googleapis|fonts\.gstatic|ERR_NAME|net::/i.test(e));
+  // A 401 before sign-in is the owner-password gate working as designed, not a
+  // fault — the browser logs every non-2xx response regardless.
+  const real = errors.filter((e) =>
+    !/favicon|fonts\.googleapis|fonts\.gstatic|ERR_NAME|net::/i.test(e)
+    && !/401 \(Unauthorized\)/i.test(e));
   check('no JavaScript errors in console', real.length === 0, real.slice(0, 3).join(' | '));
 
   await browser.close();

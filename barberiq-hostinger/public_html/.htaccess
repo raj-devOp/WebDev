@@ -1,0 +1,72 @@
+# ============================================================================
+# BarberIQ — Apache / LiteSpeed configuration for Hostinger shared hosting
+# ============================================================================
+
+# ---------------------------------------------------------------- API routing
+# Rewrites /api/wallet/12 to /api/index.php?route=wallet/12 so the browser URLs
+# match the Node build and the frontend needed no changes.
+#
+# If mod_rewrite is unavailable the app still works — js/api.js detects the
+# failure once and falls back to /api/index.php?route=... for the session.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Leave real files and folders alone (css, js, images, the installer).
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # API front controller.
+  RewriteRule ^api/(.*)$ api/index.php?route=$1 [QSA,L]
+
+  # Everything else goes to the single-page app. The app uses hash routing, so
+  # this mainly catches someone typing a path by hand.
+  RewriteCond %{REQUEST_URI} !^/api/
+  RewriteRule ^(.*)$ index.html [L]
+</IfModule>
+
+# ------------------------------------------------------------------- security
+# config.php holds your database password. Never serve it, whatever happens to
+# the PHP handler.
+<Files "config.php">
+  Require all denied
+</Files>
+<Files "config.sample.php">
+  Require all denied
+</Files>
+
+# Block direct hits on library and route files — they are only ever included by
+# api/index.php and are not meant to be entry points.
+RedirectMatch 403 ^/api/(lib|routes)/.*\.php$
+
+# Do not leak a directory listing of your source.
+Options -Indexes
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ---------------------------------------------------------------- performance
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  # Long cache for assets, but the app files are versioned by edit rather than
+  # filename, so keep them short or a client sees a stale UI after an update.
+  ExpiresByType image/png            "access plus 30 days"
+  ExpiresByType image/svg+xml        "access plus 30 days"
+  ExpiresByType text/css             "access plus 1 hour"
+  ExpiresByType application/javascript "access plus 1 hour"
+  ExpiresByType text/html            "access plus 0 seconds"
+</IfModule>
+
+# --------------------------------------------------------------------- errors
+# Keep PHP notices out of API responses; they break JSON parsing and can leak
+# table names. Turn display_errors on only while troubleshooting.
+<IfModule mod_php.c>
+  php_flag display_errors off
+</IfModule>
