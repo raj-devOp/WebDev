@@ -1,6 +1,6 @@
 ---
 name: ui-ux-pro-max
-description: "UI/UX design intelligence. 67 styles, 161 palettes, 57 font pairings, 25 charts, 21 stacks (React, Next.js, Vue, Svelte, Astro, SwiftUI, React Native, Flutter, WPF, WinUI 3, UWP, Avalonia, Uno Platform, Nuxt, Nuxt UI, Tailwind, shadcn/ui, Jetpack Compose, Three.js, Angular, Laravel). Actions: plan, build, create, design, implement, review, fix, improve, optimize, enhance, refactor, check UI/UX code. Projects: website, landing page, dashboard, admin panel, e-commerce, SaaS, portfolio, blog, mobile app, desktop app, .html, .tsx, .vue, .svelte, .xaml. Elements: button, modal, navbar, sidebar, card, table, form, chart. Styles: glassmorphism, claymorphism, minimalism, brutalism, neumorphism, bento grid, dark mode, responsive, skeuomorphism, flat design. Topics: color palette, accessibility, animation, layout, typography, font pairing, spacing, hover, shadow, gradient. Integrations: shadcn/ui MCP for component search and examples."
+description: "UI/UX design intelligence. Searchable local database with 67 styles, 161 palettes, 57 font pairings, 25 charts, and 21 stacks (React, Next.js, Vue, Svelte, Astro, SwiftUI, React Native, Flutter, WPF, WinUI 3, UWP, Avalonia, Uno Platform, Nuxt, Nuxt UI, Tailwind, shadcn/ui, Jetpack Compose, Three.js, Angular, Laravel). Use when designing, building, or reviewing UI: pages, components, color schemes, typography, layout, accessibility, animation, or data visualization."
 ---
 # UI/UX Pro Max - Design Intelligence
 
@@ -10,9 +10,9 @@ Comprehensive design guide for web, mobile, and desktop applications. Contains 6
 
 当任务涉及 **UI 结构、视觉设计决策、交互模式或用户体验质量控制** 时，应使用此 Skill。
 
-### Must Use
+### Primary Use Cases
 
-在以下情况必须调用此 Skill：
+在以下情况此 Skill 最为有用：
 
 - 设计新的页面（Landing Page、Dashboard、Admin、SaaS、Mobile App）
 - 创建或重构 UI 组件（按钮、弹窗、表单、表格、图表等）
@@ -305,28 +305,15 @@ Search specific domains using the CLI tool below.
 ---
 # Prerequisites
 
-Check if Python is installed:
+The bundled scripts require Python 3 (standard library only — no third-party packages, no network access). Check if it is available:
 
 ```bash
 python3 --version || python --version
 ```
 
-If Python is not installed, install it based on user's OS:
+If Python is not installed, **do not install it yourself**. Stop and ask the user to install Python 3 using their preferred method (e.g. from [python.org](https://www.python.org/downloads/) or their OS package manager), then continue once it is available. Never run package-manager or system-modifying commands (`sudo`, `brew`, `apt`, `winget`, etc.) on the user's machine for this skill.
 
-**macOS:**
-```bash
-brew install python3
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt update && sudo apt install python3
-```
-
-**Windows:**
-```powershell
-winget install Python.Python.3.12
-```
+If the user prefers not to install Python, skip the CLI searches and rely on the Quick Reference sections above.
 
 > **Note:** On Windows, use `python` instead of `python3` to run scripts (e.g., `python scripts/search.py` instead of `python3 scripts/search.py`).
 
@@ -356,7 +343,12 @@ Extract key information from user request:
 - **Product type**: Entertainment (social, video, music, gaming), Tool (scanner, editor, converter), Productivity (task manager, notes, calendar), or hybrid
 - **Target audience**: C-end consumer users; consider age group, usage context (commute, leisure, work)
 - **Style keywords**: playful, vibrant, minimal, dark mode, content-first, immersive, etc.
-- **Stack**: React Native (this project's only tech stack)
+- **Stack**: whatever the user is actually building with — infer it from the project
+  (package.json, existing files, explicit request) or ask. Then load its rules with
+  `--stack <name>` (see "Available Stacks"). Do not assume React Native.
+- **Platform**: web or native app. Several sections below are scoped to App UI
+  (iOS/Android/React Native/Flutter) and do not apply to desktop-web work —
+  safe areas, haptics, bottom nav and Dynamic Type are mobile-only concerns.
 
 ### Step 2: Generate Design System (REQUIRED)
 
@@ -455,7 +447,9 @@ python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain> [-n
 | Landing structure | `landing` | `--domain landing "hero social-proof"` |
 | React Native perf | `react` | `--domain react "rerender memo list"` |
 | App interface a11y | `web` | `--domain web "accessibilityLabel touch safe-areas"` |
-| AI prompt / CSS keywords | `prompt` | `--domain prompt "minimalism"` |
+| Icon suggestions | `icons` | `--domain icons "navigation arrows"` |
+| Individual Google Fonts | `google-fonts` | `--domain google-fonts "variable sans serif"` |
+| GSAP animation snippets | `gsap` | `--domain gsap "scroll reveal stagger"` |
 
 ### Step 4: Stack Guidelines
 
@@ -483,14 +477,12 @@ python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack <stack>
 | `gsap` | GSAP animation skeletons by intensity tier | scroll reveal, stagger, magnetic cursor, page transition |
 | `react` | React/Next.js performance | waterfall, bundle, suspense, memo, rerender, cache |
 | `web` | App interface guidelines (iOS/Android/React Native) | accessibilityLabel, touch targets, safe areas, Dynamic Type |
-| `prompt` | AI prompts, CSS keywords | (style name) |
+| `icons` | Icon recommendations with import code | arrow, navigation, lucide, phosphor |
+| `google-fonts` | Individual Google Fonts lookup | sans serif, monospace, japanese, variable font, popular |
 
 ### Available Stacks
 
-| Stack | Focus |
-|-------|-------|
-| `react-native` | Components, Navigation, Lists |
-| `javafx` | Enterprise desktop apps, AtlantaFX themes, FXML, CSS, Controls, Binding, Threading, Packaging |
+`react`, `nextjs`, `vue`, `svelte`, `astro`, `swiftui`, `react-native`, `flutter`, `nuxtjs`, `nuxt-ui`, `html-tailwind`, `shadcn`, `jetpack-compose`, `threejs`, `angular`, `laravel`, `javafx`, `wpf`, `winui`, `avalonia`, `uno`, `uwp`
 
 **JavaFX enterprise examples:**
 
