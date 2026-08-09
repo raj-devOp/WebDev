@@ -1,0 +1,26 @@
+{
+  "name": "barberiq",
+  "version": "1.0.0",
+  "description": "BarberIQ — intelligent barbershop operating system: prepaid wallet, learned rebook reminders, add-on recommendations, referrals and an owner dashboard.",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "reseed": "node scripts/reseed.js",
+    "test": "node test/api-test.js",
+    "test:ui": "node test/ui-test.js",
+    "backup": "node scripts/backup.js",
+    "export:sql": "node scripts/export-sql.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
