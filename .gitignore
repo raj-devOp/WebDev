@@ -1,2 +1,6 @@
 __pycache__/
 *.py[cod]
+
+# Distributable zips are build artifacts, fully derived from committed source.
+# Regenerate with:  cd barberiq && npm run package
+barberiq-*.zip

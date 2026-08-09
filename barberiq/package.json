@@ -14,7 +14,8 @@
     "test": "node test/api-test.js",
     "test:ui": "node test/ui-test.js",
     "backup": "node scripts/backup.js",
-    "export:sql": "node scripts/export-sql.js"
+    "export:sql": "node scripts/export-sql.js",
+    "package": "node scripts/package.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",
